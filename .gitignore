@@ -1,0 +1,38 @@
+# Node
+node_modules/
+
+# Yarn
+yarn-error.log
+
+# Hardhat
+cache/
+abis/
+artifacts/
+deployments/*-fork/**
+hardhat-configs/
+.logs
+
+# Typechain
+typechain-types/
+
+# Env
+.env
+
+# Coverage
+coverage/
+coverage.json
+
+# Intellij
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# ESLint
+.eslintcache
+
+# Dodoc
+docs/**/*
+
+.history/
