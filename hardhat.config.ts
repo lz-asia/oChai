@@ -7,6 +7,7 @@ import "hardhat-spdx-license-identifier";
 import "hardhat-watcher";
 import "@lz-asia/lz-kit/hardhat";
 import "@primitivefi/hardhat-dodoc";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 import { HardhatUserConfig, task } from "hardhat/config";
 
@@ -74,6 +75,7 @@ const config: HardhatUserConfig = {
                 enabled: process.env.FORKING === "true",
                 url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
             },
+            chainId: process.env.FORKING === "true" ? 1 : 31337,
             live: false,
             saveDeployments: true,
             tags: ["test", "local"],
