@@ -105,11 +105,6 @@ contract BasedOmniChai is BasedOFT, ERC4626 {
                 : (shares * _calculateCurrentChi()) / RAY;
     }
 
-    // view functions
-    function maxDeposit(address) public pure override returns (uint256) {
-        return type(uint256).max;
-    }
-
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
         dai.transferFrom(caller, address(this), assets);
         daiJoin.join(address(this), assets);
@@ -138,6 +133,16 @@ contract BasedOmniChai is BasedOFT, ERC4626 {
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
+    // staticcall functions
+    function maxDeposit(address) public pure override returns (uint256) {
+        return type(uint256).max;
+    }
+
+    function totalAssets() public view override returns (uint256) {
+        return convertToAssets(totalSupply());
+    }
+
+    // call functions
     function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
