@@ -14,6 +14,10 @@ oChai's integration with the DSR allows oChai token holders to earn passive inco
 
 Through its integration with LayerZero's OFT, oChai facilitates seamless cross-chain asset transfers, providing users with the opportunity to move their assets between Ethereum and other supported chains. This significantly expands the potential uses and liquidity of oChai tokens.
 
+## Wrapper Functions
+
+For added convenience, the oChai contract includes wrapper functions `depositAndSendFrom` and `mintAndSendFrom`. These allow users to mint oChai tokens and send them to a different chain in a single operation, greatly simplifying the process.
+
 ## How to Use oChai
 
 Using oChai tokens is as straightforward as using any ERC4626 token:
@@ -34,4 +38,4 @@ oChai is [MIT licensed](./LICENSE).
 
 ## Contact
 
-For any questions or suggestions, please feel free to reach out to us through [email](hb@thegreathb.com) or by opening an issue on our [GitHub repository](https://github.com/lz-asia/oChai/issues).
+For any questions or suggestions, please feel free to reach out to us through [email](mailto:hb@thegreathb.com) or by opening an issue on our [GitHub repository](https://github.com/lz-asia/oChai/issues).

@@ -170,6 +170,33 @@ contract BasedOmniChai is BasedOFT, ERC4626 {
         assets = (shares * _getCurrentChi()) / RAY;
         _withdraw(msg.sender, receiver, owner, assets, shares);
     }
+
+    // Wrapper functions
+    function depositAndSendFrom(
+        uint256 assets,
+        uint16 _dstChainId,
+        bytes calldata _toAddress,
+        address payable _refundAddress,
+        address _zroPaymentAddress,
+        bytes calldata _adapterParams
+    ) external payable returns (uint256 shares) {
+        shares = (assets * RAY) / _getCurrentChi();
+        _deposit(msg.sender, msg.sender, assets, shares);
+        _send(msg.sender, _dstChainId, _toAddress, shares, _refundAddress, _zroPaymentAddress, _adapterParams);
+    }
+
+    function mintAndSendFrom(
+        uint256 shares,
+        uint16 _dstChainId,
+        bytes calldata _toAddress,
+        address payable _refundAddress,
+        address _zroPaymentAddress,
+        bytes calldata _adapterParams
+    ) external payable returns (uint256 assets) {
+        assets = Math.ceilDiv(shares * _getCurrentChi(), RAY);
+        _deposit(msg.sender, msg.sender, assets, shares);
+        _send(msg.sender, _dstChainId, _toAddress, shares, _refundAddress, _zroPaymentAddress, _adapterParams);
+    }
 }
 
 contract OmniChai is OFT {
