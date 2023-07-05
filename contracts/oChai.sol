@@ -134,10 +134,6 @@ contract BasedOmniChai is BasedOFT, ERC4626 {
     }
 
     // staticcall functions
-    function maxDeposit(address) public pure override returns (uint256) {
-        return type(uint256).max;
-    }
-
     function totalAssets() public view override returns (uint256) {
         return convertToAssets(totalSupply());
     }
