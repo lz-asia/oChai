@@ -32,6 +32,12 @@ Using oChai tokens is as straightforward as using any ERC4626 token:
 
 oChai brings together the power of DeFi and the convenience of seamless cross-chain asset transfers.
 
+## How to Test
+
+1. yarn install
+2. update FORKING as true and add ALCHEMY_API_KEY in .env
+3. yarn test
+
 ## License
 
 oChai is [MIT licensed](./LICENSE).
