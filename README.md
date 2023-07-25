@@ -1,6 +1,6 @@
 # OmniChai (oChai)
 
-OmniChai (oChai) is an innovative ERC4626 token that is intricately integrated with the Dai Savings Rate (DSR) and also leverages the capabilities of LayerZero's Open Finance Token (OFT). This provides users with a unique advantage: earning interest through DSR and allowing easy asset transfers between Ethereum and other chains.
+OmniChai (oChai) is an innovative ERC4626 token that is intricately integrated with the Dai Savings Rate (DSR) and also leverages the capabilities of LayerZero's Omnichain Fungible Token (OFT). This provides users with a unique advantage: earning interest through DSR and allowing easy asset transfers between Ethereum and other chains.
 
 ## What is oChai?
 
