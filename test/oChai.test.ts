@@ -9,6 +9,7 @@ import {
     SnapshotRestorer,
     takeSnapshot,
     time,
+    setStorageAt,
 } from "@nomicfoundation/hardhat-network-helpers";
 
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -30,10 +31,8 @@ describe("oChai", () => {
     before(async () => {
         expect((await ethers.provider.getNetwork()).chainId).to.be.equal(1);
 
-        await impersonateAccount("0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503");
-        user = await ethers.getSigner("0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503");
-
-        vitalik = (await ethers.getSigners())[0];
+        [user, vitalik] = await ethers.getSigners();
+        await setBalance(user.address, utils.parseEther("1000"));
         await setBalance(vitalik.address, utils.parseEther("1000"));
 
         const layerZeroEP = "0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675";
@@ -45,6 +44,14 @@ describe("oChai", () => {
             "BasedOmniChai",
             "0x83F20F44975D03b1b09e64809B757c47f942BEeA"
         )) as BasedOmniChai;
+
+        const amount = utils.parseEther("100000");
+        await setStorageAt(dai.address, 1, (await dai.totalSupply()).add(amount));
+        await setStorageAt(
+            dai.address,
+            utils.keccak256(utils.hexZeroPad(user.address, 32) + utils.hexZeroPad("0x02", 32).slice(2)),
+            (await dai.balanceOf(user.address)).add(amount)
+        );
 
         snapshot = await takeSnapshot();
     });
