@@ -335,7 +335,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
     function mint(uint256 shares, address receiver) external returns (uint256 assets) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
-        wxdai.transferFrom(msg.sender, address(this), sDAI.convertToAssets(shares));
+        wxdai.transferFrom(msg.sender, address(this), sDAI.previewMint(shares));
         assets = sDAI.mint(shares, address(this));
 
         _mintOChai(msg.sender, receiver, assets, shares);
@@ -419,7 +419,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         address _zroPaymentAddress,
         bytes calldata _adapterParams
     ) external payable returns (uint256 assets) {
-        wxdai.transferFrom(msg.sender, address(this), sDAI.convertToAssets(shares));
+        wxdai.transferFrom(msg.sender, address(this), sDAI.previewMint(shares));
         assets = sDAI.mint(shares, address(this));
         _mintOChai(msg.sender, address(this), assets, shares);
 
