@@ -323,7 +323,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
     }
 
     // call functions
-    function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver) public returns (uint256 shares) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         wxdai.transferFrom(msg.sender, address(this), assets);
@@ -332,7 +332,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         _mintOChai(msg.sender, receiver, assets, shares);
     }
 
-    function mint(uint256 shares, address receiver) external returns (uint256 assets) {
+    function mint(uint256 shares, address receiver) public returns (uint256 assets) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         wxdai.transferFrom(msg.sender, address(this), sDAI.previewMint(shares));
@@ -341,7 +341,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         _mintOChai(msg.sender, receiver, assets, shares);
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares) {
+    function withdraw(uint256 assets, address receiver, address owner) public returns (uint256 shares) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         shares = sDAI.withdraw(assets, address(this), address(this));
@@ -349,7 +349,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         wxdai.transfer(receiver, assets);
     }
 
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets) {
+    function redeem(uint256 shares, address receiver, address owner) public returns (uint256 assets) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         assets = sDAI.redeem(shares, address(this), address(this));
@@ -371,7 +371,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         _mintOChai(msg.sender, receiver, assets, shares);
     }
 
-    function withdrawXDAI(uint256 assets, address receiver, address owner) public payable returns (uint256 shares) {
+    function withdrawXDAI(uint256 assets, address receiver, address owner) public returns (uint256 shares) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         if (assets == 0) {
@@ -385,7 +385,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         Address.sendValue(payable(receiver), assets);
     }
 
-    function redeemXDAI(uint256 shares, address receiver, address owner) public payable returns (uint256 assets) {
+    function redeemXDAI(uint256 shares, address receiver, address owner) public returns (uint256 assets) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
         assets = sDAI.redeem(shares, address(this), address(this));
@@ -404,10 +404,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         address _zroPaymentAddress,
         bytes calldata _adapterParams
     ) external payable returns (uint256 shares) {
-        wxdai.transferFrom(msg.sender, address(this), assets);
-        shares = sDAI.deposit(assets, address(this));
-        _mintOChai(msg.sender, address(this), assets, shares);
-
+        shares = deposit(assets, msg.sender);
         _send(msg.sender, _dstChainId, _toAddress, shares, _refundAddress, _zroPaymentAddress, _adapterParams);
     }
 
@@ -419,10 +416,7 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         address _zroPaymentAddress,
         bytes calldata _adapterParams
     ) external payable returns (uint256 assets) {
-        wxdai.transferFrom(msg.sender, address(this), sDAI.previewMint(shares));
-        assets = sDAI.mint(shares, address(this));
-        _mintOChai(msg.sender, address(this), assets, shares);
-
+        assets = mint(shares, msg.sender);
         _send(msg.sender, _dstChainId, _toAddress, shares, _refundAddress, _zroPaymentAddress, _adapterParams);
     }
 }
