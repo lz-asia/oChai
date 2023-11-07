@@ -408,6 +408,25 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
         _send(msg.sender, _dstChainId, _toAddress, shares, _refundAddress, _zroPaymentAddress, _adapterParams);
     }
 
+    function depositXDAIAndSendFrom(
+        uint256 assets,
+        uint16 _dstChainId,
+        bytes calldata _toAddress,
+        address payable _refundAddress,
+        address _zroPaymentAddress,
+        bytes calldata _adapterParams
+    ) external payable returns (uint256 shares) {
+        wxdai.deposit{value: assets}();
+        shares = sDAI.deposit(assets, address(this));
+        _mintOChai(msg.sender, msg.sender, assets, shares);
+
+        _checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
+        uint amount = _debitFrom(msg.sender, _dstChainId, _toAddress, shares);
+        bytes memory lzPayload = abi.encode(PT_SEND, _toAddress, amount);
+        _lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - assets);
+        emit SendToChain(_dstChainId, msg.sender, _toAddress, amount);
+    }
+
     function mintAndSendFrom(
         uint256 shares,
         uint16 _dstChainId,
