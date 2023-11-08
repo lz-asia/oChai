@@ -73,9 +73,12 @@ const config: HardhatUserConfig = {
             // Reported to HardHat team and fix is incoming
             forking: {
                 enabled: process.env.FORKING === "true",
-                url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+                url:
+                    process.env.FORKING_CHAINID === "1"
+                        ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`
+                        : process.env.FORKING_RPC_URL,
             },
-            chainId: process.env.FORKING === "true" ? 1 : 31337,
+            chainId: process.env.FORKING === "true" ? Number(process.env.FORKING_CHAINID) : 31337,
             live: false,
             saveDeployments: true,
             tags: ["test", "local"],
@@ -97,20 +100,12 @@ const config: HardhatUserConfig = {
             tags: ["staging"],
         },
         bsc: {
-            url: `https://bsc-dataseed1.binance.org`,
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/bnb`,
             accounts,
             chainId: 56,
             live: true,
             saveDeployments: true,
             tags: ["production"],
-        },
-        "bsc-testnet": {
-            url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
-            accounts,
-            chainId: 97,
-            live: true,
-            saveDeployments: true,
-            tags: ["staging"],
         },
         polygon: {
             url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -120,14 +115,6 @@ const config: HardhatUserConfig = {
             saveDeployments: true,
             tags: ["production"],
         },
-        mumbai: {
-            url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_API_KEY}`,
-            accounts,
-            chainId: 80001,
-            live: true,
-            saveDeployments: true,
-            tags: ["staging"],
-        },
         avalanche: {
             url: `https://avalanche-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
             accounts,
@@ -135,14 +122,6 @@ const config: HardhatUserConfig = {
             live: true,
             saveDeployments: true,
             tags: ["production"],
-        },
-        fuji: {
-            url: `https://avalanche-fuji.infura.io/v3/${process.env.INFURA_API_KEY}`,
-            accounts,
-            chainId: 43113,
-            live: true,
-            saveDeployments: true,
-            tags: ["staging"],
         },
         optimism: {
             url: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -152,14 +131,6 @@ const config: HardhatUserConfig = {
             saveDeployments: true,
             tags: ["production"],
         },
-        "optimism-goerli": {
-            url: `https://optimism-goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
-            accounts,
-            chainId: 420,
-            live: true,
-            saveDeployments: true,
-            tags: ["staging"],
-        },
         arbitrum: {
             url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
             accounts,
@@ -168,29 +139,61 @@ const config: HardhatUserConfig = {
             saveDeployments: true,
             tags: ["production"],
         },
-        "arbitrum-goerli": {
-            url: `https://arbitrum-goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+        base: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/base`,
             accounts,
-            chainId: 421613,
-            live: true,
-            saveDeployments: true,
-            tags: ["staging"],
-        },
-        fantom: {
-            url: `https://rpc.testnet.fantom.network/`,
-            accounts,
-            chainId: 250,
+            chainId: 8453,
             live: true,
             saveDeployments: true,
             tags: ["production"],
         },
-        "fantom-testnet": {
-            url: `https://rpc.testnet.fantom.network/`,
+        linea: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/linea`,
             accounts,
-            chainId: 4002,
+            chainId: 59144,
             live: true,
             saveDeployments: true,
-            tags: ["staging"],
+            tags: ["production"],
+        },
+        moonbeam: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/glmr`,
+            accounts,
+            chainId: 1284,
+            live: true,
+            saveDeployments: true,
+            tags: ["production"],
+        },
+        zkevm: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/zkevm`,
+            accounts,
+            chainId: 1101,
+            live: true,
+            saveDeployments: true,
+            tags: ["production"],
+        },
+        mantle: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/mantle`,
+            accounts,
+            chainId: 5000,
+            live: true,
+            saveDeployments: true,
+            tags: ["production"],
+        },
+        scroll: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/scroll`,
+            accounts,
+            chainId: 534352,
+            live: true,
+            saveDeployments: true,
+            tags: ["production"],
+        },
+        gnosis: {
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/gnosis`,
+            accounts,
+            chainId: 100,
+            live: true,
+            saveDeployments: true,
+            tags: ["production"],
         },
     },
     preprocess: {
