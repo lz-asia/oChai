@@ -194,6 +194,10 @@ contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
     function redeemXDAI(uint256 shares, address receiver, address owner) public returns (uint256 assets) {
         if (receiver == address(0) || receiver == address(this)) revert InvalidReceiver();
 
+        if (shares == 0) {
+            return 0;
+        }
+
         assets = sDAI.redeem(shares, address(this), address(this));
         _burnOChai(msg.sender, receiver, owner, assets, shares);
 
