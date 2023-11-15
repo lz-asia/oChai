@@ -103,6 +103,7 @@
     "hardhat-preprocessor": "^0.1.0",
     "hardhat-spdx-license-identifier": "^2.0.0",
     "hardhat-watcher": "^2.5.0",
+    "hardhat_metamask_client": "1.0.32",
     "husky": "^8.0.0",
     "lint-staged": "^13.0.0",
     "prettier": "^2.8.8",
