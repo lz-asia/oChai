@@ -3,34 +3,7 @@ pragma solidity ^0.8.18;
 
 import "@layerzerolabs/solidity-examples/contracts/token/oft/extension/BasedOFT.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
-interface VatLike {
-    function hope(address) external;
-}
-
-interface PotLike {
-    function chi() external view returns (uint256);
-
-    function rho() external view returns (uint256);
-
-    function dsr() external view returns (uint256);
-
-    function drip() external returns (uint256);
-
-    function join(uint256) external;
-
-    function exit(uint256) external;
-}
-
-interface DaiJoinLike {
-    function vat() external view returns (address);
-
-    function dai() external view returns (address);
-
-    function join(address, uint256) external;
-
-    function exit(address, uint256) external;
-}
+import "./interfaces/DSRInterfaces.sol";
 
 error InvalidChainId();
 error InvalidReceiver();

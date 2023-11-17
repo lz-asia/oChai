@@ -4,41 +4,8 @@ pragma solidity ^0.8.18;
 import "@layerzerolabs/solidity-examples/contracts/token/oft/extension/BasedOFT.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-
-interface IWXDAI {
-    function deposit() external payable;
-
-    function withdraw(uint256) external;
-
-    function approve(address guy, uint256 wad) external returns (bool);
-
-    function transferFrom(address src, address dst, uint256 wad) external returns (bool);
-
-    function transfer(address dst, uint256 wad) external returns (bool);
-}
-
-interface IBridgeInterestReceiver {
-    // mutations
-    function claim() external;
-
-    // view functions
-    function vaultAPY() external view returns (uint256);
-
-    function previewClaimable() external view returns (uint256);
-
-    //variables
-    function claimer() external view returns (address);
-
-    function dripRate() external view returns (uint256);
-
-    function nextClaimEpoch() external view returns (uint256);
-
-    function lastClaimTimestamp() external view returns (uint256);
-
-    function currentEpochBalance() external view returns (uint256);
-
-    function epochLength() external view returns (uint256);
-}
+import "./interfaces/IWXDAI.sol";
+import "./interfaces/IBridgeInterestReceiver.sol";
 
 contract OmniChaiOnGnosis is BasedOFT, IERC4626 {
     error InvalidChainId();
