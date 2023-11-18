@@ -6,14 +6,16 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IOmniChaiGateway.sol";
 
-/**
- * @title OmniChaiGateway
- * @author TheGreatHB
- * @notice drafts of the OmniChaiGateway contract
- */
-
 contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     using BytesLib for bytes;
+
+    error InvalidStatus();
+    error InvalidTaker();
+    error InvalidSrcChain();
+    error InvalidPacketType();
+    error TooLowGasLimit(uint256 minGasLimit, uint256 providedGasLimit);
+    error InvalidNativeForDst();
+    error UncancellableDeposit();
 
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
@@ -62,7 +64,8 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         address _zroPaymentAddress,
         uint256 gaslimit
     ) external payable {
-        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit) revert("OmniChaiGateway: gaslimit too low"); //TODO custom Err
+        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit)
+            revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT], gaslimit);
 
         uint256 nonce = depositNonce(msg.sender);
 
@@ -89,11 +92,12 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         uint256 nativeForDst,
         uint256 returnCallGaslimit
     ) external payable {
-        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit) revert("OmniChaiGateway: gaslimit too low"); //TODO custom Err
-        if (nativeForDst == 0) revert("OmniChaiGateway: nativeForDst must be > 0"); //TODO custom Err
+        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_CANCEL] > gaslimit)
+            revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_CANCEL], gaslimit);
+        if (nativeForDst == 0) revert InvalidNativeForDst();
 
         DepositRequest storage request = _depositRequests[msg.sender][nonce];
-        require(request.status == Status.Pending, "OmniChaiGateway: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
 
         bytes memory payload = abi.encode(PT_SEND_CANCEL, msg.sender, nonce, returnCallGaslimit);
         _lzSend(
@@ -109,8 +113,8 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     function executeDepositRequest(address user, uint256 nonce) external {
         DepositRequest storage request = _depositRequests[user][nonce];
-        require(request.status == Status.Pending, "OmniChaiGateway: invalid status"); //TODO custom Err
-        require(msg.sender == address(this) || request.eligibleTaker == msg.sender, "OmniChaiGateway: invalid taker"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
+        if (msg.sender != address(this) && request.eligibleTaker != msg.sender) revert InvalidTaker();
 
         request.status = Status.Completed;
 
@@ -128,7 +132,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     function requestCancelRedeem(uint256 nonce) external {
         RedeemRequest storage request = _redeemRequests[msg.sender][nonce];
-        require(request.status == Status.Pending, "OmniChaiGateway: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
         request.status = Status.Cancelled;
 
         IERC20(oChai).transfer(msg.sender, request.amount);
@@ -137,7 +141,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     function executeRedeemRequest(address user, uint256 nonce) external {
         RedeemRequest storage request = _redeemRequests[user][nonce];
-        require(request.status == Status.Pending, "OmniChaiGateway: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
         request.status = Status.Completed;
 
         IERC20(dai).transferFrom(msg.sender, user, request.desiredDai);
@@ -151,7 +155,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         uint64 _nonce,
         bytes memory _payload
     ) internal override {
-        require(_srcChainId == CHAIN_ID_GNOSIS, "OmniChaiGateway: invalid srcChainId"); //TODO custom Err
+        if (_srcChainId != CHAIN_ID_GNOSIS) revert InvalidSrcChain();
 
         uint16 packetType;
         assembly {
@@ -163,7 +167,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         } else if (packetType == PT_SEND_CANCEL) {
             _sendCancelAck(_srcChainId, _srcAddress, _nonce, _payload);
         } else {
-            revert("OmniChaiGateway: unknown packet type");
+            revert InvalidPacketType();
         }
     }
 
@@ -182,8 +186,8 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         (, address user, uint256 nonce) = abi.decode(_payload, (uint16, address, uint256));
 
         DepositRequest storage request = _depositRequests[msg.sender][nonce];
-        require(request.status == Status.Pending, "OmniChaiGateway: invalid status"); //TODO custom Err
-        require(request.eligibleTaker == address(0), "OmniChaiGateway: invalid taker"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
+        if (request.eligibleTaker != address(0)) revert UncancellableDeposit();
 
         request.status = Status.Cancelled;
 

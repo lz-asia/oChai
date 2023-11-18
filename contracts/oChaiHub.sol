@@ -7,26 +7,28 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IOmniChaiHub.sol";
 import "./interfaces/IOmniChaiOnGnosis.sol";
 
-/**
- * @title OmniChaiHub
- * @author TheGreatHB
- * @notice drafts of the OmniChaiHub contract
- */
-
 contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
+    error InvalidStatus();
+    error InsufficientMsgValue();
+    error InvalidPacketType();
+
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
 
     address public immutable oChai;
+    address public immutable wxdai;
 
     mapping(uint16 srcChainId => mapping(address user => mapping(uint256 nonce => DepositRequest)))
         internal _depositRequests;
 
     mapping(uint16 packetType => uint256) public baseMinDstGasLookup;
 
-    constructor(address _endpoint, address _oChai, address _owner) NonblockingLzApp(_endpoint) {
+    constructor(address _endpoint, address _oChai, address _wxdai, address _owner) NonblockingLzApp(_endpoint) {
         oChai = _oChai;
+        wxdai = _wxdai;
         _transferOwnership(_owner);
+
+        IERC20(wxdai).approve(oChai, type(uint256).max);
     }
 
     receive() external payable {}
@@ -59,6 +61,9 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         return _depositRequests[srcChainId][user][nonce];
     }
 
+    /**
+        @notice These function calls invoke lzCall twice. The first call is for minting oChai and transferring it to dstChain, while the second call is for updating the taker and transferring assets on dstChain. If either call fails locally, it won't be a problem. However, if both messages are sent locally but one of them fails on the dstChain, it might pose an issue. Nevertheless, the only likely cause for a failure on the dstChain is a lack of gas. Even if oChai is minted to the user on the dstChain successfully and the updating/transferring of assets fails, the user's deposited DAI remains in the oChaiGateway, and the user cannot withdraw that. The only way to withdraw that is by calling a cancelDepositRequest to this network, which should fail since the status has already been updated as 'Completed' on this network. Therefore, the taker can call retryMessage on the dstChain with a higher gas limit to retrieve it safely. If the minting of oChai fails due to a lack of gas, but the assets were transferred to the taker on the dstChain, this should not be a problem either. The user can simply call retryMessage on the dstChain to receive the oChai. To prevent this inconvenient situation, we can set minDstGas for the message on the dstChain. (Actually, a default gasLimit might be sufficient for cross-chain minting.)
+    */
     function executeDepositRequest(
         uint16 srcChainId,
         address user,
@@ -68,13 +73,17 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         uint256[] memory msgValues
     ) external payable {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
-        require(request.status == Status.Pending, "OmniChaiHub: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
+        if (msgValues[0] + msgValues[1] > msg.value) revert InsufficientMsgValue();
 
         _depositRequests[srcChainId][user][nonce].status = Status.Completed;
 
+        uint256 amountForDeposit = request.amount - request.fee;
+        IERC20(wxdai).transferFrom(msg.sender, address(this), amountForDeposit);
+
         // mints oChai to the requester on srcChain
         uint256 oChaiAmount = IOmniChaiOnGnosis(oChai).depositAndSendFrom{value: msgValues[0]}(
-            request.amount - request.fee,
+            amountForDeposit,
             srcChainId,
             abi.encodePacked(user),
             payable(address(this)),
@@ -106,7 +115,8 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         uint256[] memory msgValues
     ) external payable {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
-        require(request.status == Status.Pending, "OmniChaiHub: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
+        if (msgValues[0] + msgValues[1] > msg.value) revert InsufficientMsgValue();
 
         _depositRequests[srcChainId][user][nonce].status = Status.Completed;
 
@@ -151,7 +161,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         } else if (packetType == PT_SEND_CANCEL) {
             _cancel(_srcChainId, _srcAddress, _nonce, _payload);
         } else {
-            revert("OmniChaiHub: unknown packet type");
+            revert InvalidPacketType();
         }
     }
 
@@ -162,7 +172,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         );
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        require(request.status == Status.Pending, "OmniChaiHub: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
 
         request.amount = amount;
         request.fee = fee;
@@ -177,7 +187,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         );
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        require(request.status == Status.Pending, "OmniChaiHub: invalid status"); //TODO custom Err
+        if (request.status != Status.Pending) revert InvalidStatus();
 
         request.status = Status.Cancelled;
 
