@@ -57,6 +57,37 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         return _redeemRequests[user].length;
     }
 
+    function estimateFeeRequestDeposit(
+        uint256 amount,
+        uint256 fee,
+        address _zroPaymentAddress,
+        uint256 gaslimit
+    ) external view returns (uint256 lzNativeFee, uint256 lzZROFee) {
+        (lzNativeFee, lzZROFee) = lzEndpoint.estimateFees(
+            CHAIN_ID_GNOSIS,
+            address(this),
+            abi.encode(PT_SEND_DEPOSIT, msg.sender, amount, fee, depositNonce(msg.sender)),
+            _zroPaymentAddress != address(0),
+            abi.encodePacked(uint16(1), gaslimit)
+        );
+    }
+
+    function estimateFeeRequestCancelDeposit(
+        uint256 nonce,
+        address _zroPaymentAddress,
+        uint256 gaslimit,
+        uint256 nativeForDst,
+        uint256 returnCallGaslimit
+    ) external view returns (uint256 lzNativeFee, uint256 lzZROFee) {
+        (lzNativeFee, lzZROFee) = lzEndpoint.estimateFees(
+            CHAIN_ID_GNOSIS,
+            address(this),
+            abi.encode(PT_SEND_CANCEL, msg.sender, nonce, returnCallGaslimit),
+            _zroPaymentAddress != address(0),
+            abi.encodePacked(uint16(2), gaslimit, nativeForDst, trustedRemoteLookup[CHAIN_ID_GNOSIS].toAddress(0))
+        );
+    }
+
     function requestDeposit(
         uint256 amount,
         uint256 fee,

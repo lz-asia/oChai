@@ -53,6 +53,36 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         else gasLimit = givenGasLimit;
     }
 
+    function estimateExecuteDepositRequest(
+        uint16 srcChainId,
+        address user,
+        uint256 nonce,
+        address _zroPaymentAddress,
+        uint256[] memory gaslimits
+    ) external view returns (uint256[2] memory lzNativeFees, uint256[2] memory lzZROFees) {
+        DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
+        if (request.status != Status.Pending) revert InvalidStatus();
+
+        bool payInZRO = _zroPaymentAddress != address(0);
+
+        (lzNativeFees[0], lzZROFees[0]) = IOmniChaiOnGnosis(oChai).estimateSendFee(
+            srcChainId,
+            abi.encodePacked(user),
+            IOmniChaiOnGnosis(oChai).previewDeposit(request.amount - request.fee),
+            payInZRO,
+            IOmniChaiOnGnosis(oChai).useCustomAdapterParams() ? abi.encodePacked(uint16(1), gaslimits[0]) : bytes("")
+        );
+
+        uint256 _gasLimit = _getGasLimit(srcChainId, PT_SEND_DEPOSIT, gaslimits[1]); // to avoid stack too deep error
+        (lzNativeFees[1], lzZROFees[1]) = lzEndpoint.estimateFees(
+            srcChainId,
+            address(this),
+            abi.encode(PT_SEND_DEPOSIT, user, nonce, msg.sender),
+            payInZRO,
+            abi.encodePacked(uint16(1), _gasLimit)
+        );
+    }
+
     function depositRequest(
         uint16 srcChainId,
         address user,
