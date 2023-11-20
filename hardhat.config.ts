@@ -164,7 +164,7 @@ const config: HardhatUserConfig = {
             tags: ["production"],
         },
         zkevm: {
-            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/zkevm`,
+            url: `https://1rpc.io/${process.env.ONERPC_API_KEY}/polygon/zkevm`,
             accounts,
             chainId: 1101,
             live: true,
