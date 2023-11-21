@@ -83,6 +83,26 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         );
     }
 
+    function estimateForwardCancel(
+        uint16 srcChainId,
+        address user,
+        uint256 nonce,
+        address _zroPaymentAddress,
+        uint256 returnCallGaslimit
+    ) external view returns (uint256 lzNativeFee, uint256 lzZROFee) {
+        if (_depositRequests[srcChainId][user][nonce].status != Status.Pending) revert InvalidStatus();
+
+        bool payInZRO = _zroPaymentAddress != address(0);
+
+        (lzNativeFee, lzZROFee) = lzEndpoint.estimateFees(
+            srcChainId,
+            address(this),
+            abi.encode(PT_SEND_CANCEL, user, nonce),
+            payInZRO,
+            abi.encodePacked(uint16(1), _getGasLimit(srcChainId, PT_SEND_CANCEL, returnCallGaslimit))
+        );
+    }
+
     function depositRequest(
         uint16 srcChainId,
         address user,
