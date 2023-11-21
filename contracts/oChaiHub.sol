@@ -221,7 +221,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
 
         request.status = Status.Cancelled;
 
-        bytes memory payload = abi.encode(PT_SEND_CANCEL, msg.sender, nonce);
+        bytes memory payload = abi.encode(PT_SEND_CANCEL, user, nonce);
         _lzSend(
             _srcChainId,
             payload,
