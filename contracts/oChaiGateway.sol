@@ -5,6 +5,7 @@ import "@layerzerolabs/solidity-examples/contracts/lzApp/NonblockingLzApp.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IOmniChaiGateway.sol";
+import "./interfaces/IUniversalStorage.sol";
 
 contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     using BytesLib for bytes;
@@ -22,6 +23,9 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     uint16 public immutable CHAIN_ID_GNOSIS;
 
+    bytes32 private constant LZ_EP_SLOT = keccak256("lzEndpoint");
+    bytes32 private constant DAI_OCHAI_SLOT = keccak256("daioChai");
+
     address public immutable oChai;
     address public immutable dai;
 
@@ -29,16 +33,21 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     mapping(address user => RedeemRequest[]) internal _redeemRequests;
 
     constructor(
-        address _endpoint,
-        address _oChai,
-        address _dai,
+        IUniversalStorage _universalStorage,
         uint16 gnosis_chain_id,
         address _owner
-    ) NonblockingLzApp(_endpoint) {
-        oChai = _oChai;
-        dai = _dai;
+    ) NonblockingLzApp(_calculateEndpoint(_universalStorage)) {
+        bytes memory d = _universalStorage.getBytesData(DAI_OCHAI_SLOT);
+        dai = d.toAddress(0);
+        oChai = d.toAddress(20);
+
         CHAIN_ID_GNOSIS = gnosis_chain_id;
         _transferOwnership(_owner);
+    }
+
+    function _calculateEndpoint(IUniversalStorage _universalStorage) private view returns (address) {
+        bytes memory d = _universalStorage.getBytesData(LZ_EP_SLOT);
+        return d.toAddress(0);
     }
 
     function depositRequest(address user, uint256 nonce) external view returns (DepositRequest memory) {
@@ -88,6 +97,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         );
     }
 
+    // amount 는 fee 보다 커야함. Minimum fee rate 를 설정해야할까? TODO
     function requestDeposit(
         uint256 amount,
         uint256 fee,
