@@ -23,8 +23,10 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     uint16 public immutable CHAIN_ID_GNOSIS;
 
-    bytes32 private constant LZ_EP_SLOT = keccak256("lzEndpoint");
-    bytes32 private constant DAI_OCHAI_SLOT = keccak256("daioChai");
+    //keccak256("lzEndpoint");
+    bytes32 private constant LZ_EP_SLOT = 0x56be12b30f425a33a2943931f159bd39e83ed09e4ad9e0d4567a2fac237761c7;
+    //keccak256("daioChai");
+    bytes32 private constant DAI_OCHAI_SLOT = 0x2e3859ec9fc81630187d358e1fb32dbba14ac40a1bf667d0d6ddb77cc9b1fb15;
 
     address public immutable oChai;
     address public immutable dai;
