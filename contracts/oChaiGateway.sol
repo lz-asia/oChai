@@ -160,12 +160,13 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     function executeDepositRequest(address user, uint256 nonce) external {
         DepositRequest storage request = _depositRequests[user][nonce];
         if (request.status != Status.Pending) revert InvalidStatus();
-        if (msg.sender != address(this) && request.eligibleTaker != msg.sender) revert InvalidTaker();
+        address taker = request.eligibleTaker;
+        if (msg.sender != address(this) && taker != msg.sender) revert InvalidTaker();
 
         request.status = Status.Completed;
 
-        IERC20(dai).transfer(msg.sender, request.amount);
-        emit ExecuteDepositRequest(user, nonce, msg.sender, request.amount);
+        IERC20(dai).transfer(taker, request.amount);
+        emit ExecuteDepositRequest(user, nonce, taker, request.amount);
     }
 
     function requestRedeem(uint256 amount, uint256 desiredDai, uint256 deadline) external {
@@ -231,7 +232,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     function _sendCancelAck(uint16, bytes memory, uint64, bytes memory _payload) internal {
         (, address user, uint256 nonce) = abi.decode(_payload, (uint16, address, uint256));
 
-        DepositRequest storage request = _depositRequests[msg.sender][nonce];
+        DepositRequest storage request = _depositRequests[user][nonce];
         if (request.status != Status.Pending) revert InvalidStatus();
         if (request.eligibleTaker != address(0)) revert UncancellableDeposit();
 
