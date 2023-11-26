@@ -17,11 +17,13 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     error TooLowGasLimit(uint256 minGasLimit, uint256 providedGasLimit);
     error InvalidNativeForDst();
     error UncancellableDeposit();
+    error TooLowFee(uint256 minFee, uint256 providedFee);
 
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
 
     uint16 public immutable CHAIN_ID_GNOSIS;
+    uint16 public constant MINIMUM_FEE_RATE = 10; // 0.1%
 
     //keccak256("lzEndpoint");
     bytes32 private constant LZ_EP_SLOT = 0x56be12b30f425a33a2943931f159bd39e83ed09e4ad9e0d4567a2fac237761c7;
@@ -99,7 +101,6 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         );
     }
 
-    // amount 는 fee 보다 커야함. Minimum fee rate 를 설정해야할까? TODO
     function requestDeposit(
         uint256 amount,
         uint256 fee,
@@ -109,6 +110,8 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     ) external payable {
         if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit)
             revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT], gaslimit);
+        uint256 minFee = (amount * MINIMUM_FEE_RATE) / 10000;
+        if (fee < minFee) revert TooLowFee(minFee, fee);
 
         uint256 nonce = depositNonce(msg.sender);
 
