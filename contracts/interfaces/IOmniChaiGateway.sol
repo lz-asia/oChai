@@ -4,19 +4,31 @@ pragma solidity ^0.8.18;
 import "@layerzerolabs/solidity-examples/contracts/interfaces/ILayerZeroReceiver.sol";
 
 interface IOmniChaiGateway is ILayerZeroReceiver {
-    event RequestDeposit(address user, uint256 nonce, uint256 amount, uint256 fee);
-    event RequestCancelDeposit(address user, uint256 nonce);
+    event RequestDeposit(address indexed user, uint256 indexed nonce, uint256 amount, uint256 fee);
+    event RequestCancelDeposit(address indexed user, uint256 indexed nonce);
 
-    event RequestRedeem(address user, uint256 nonce, uint256 amount, uint256 desiredDai, uint256 deadline);
-    event RequestCancelRedeem(address user, uint256 nonce);
+    event RequestRedeem(
+        address indexed user,
+        uint256 indexed nonce,
+        uint256 amount,
+        uint256 desiredDai,
+        uint256 deadline
+    );
+    event RequestCancelRedeem(address indexed user, uint256 indexed nonce);
 
-    event ExecuteDepositRequest(address user, uint256 nonce, address taker, uint256 daiAmount);
-    event ExecuteRedeemRequest(address user, uint256 nonce, address taker, uint256 oChaiAmount, uint256 daiAmount);
+    event ExecuteDepositRequest(address indexed user, uint256 indexed nonce, address indexed taker, uint256 daiAmount);
+    event ExecuteRedeemRequest(
+        address indexed user,
+        uint256 indexed nonce,
+        address indexed taker,
+        uint256 oChaiAmount,
+        uint256 daiAmount
+    );
 
-    event UpdateEligibleTaker(address user, uint256 nonce, address taker);
-    event CancelDeposit(address user, uint256 nonce);
+    event UpdateEligibleTaker(address indexed user, uint256 indexed nonce, address indexed taker);
+    event CancelDeposit(address indexed user, uint256 indexed nonce);
 
-    event FailedExecutingDepositRequest(address user, uint256 nonce, address taker);
+    event FailedExecutingDepositRequest(address indexed user, uint256 indexed nonce, address indexed taker);
 
     enum Status {
         Pending,
@@ -44,6 +56,12 @@ interface IOmniChaiGateway is ILayerZeroReceiver {
 
     function CHAIN_ID_GNOSIS() external view returns (uint16);
 
+    function PT_SEND_DEPOSIT() external view returns (uint16);
+
+    function PT_SEND_CANCEL() external view returns (uint16);
+
+    function MINIMUM_FEE_RATE() external view returns (uint16);
+
     function depositNonce(address user) external view returns (uint256);
 
     function redeemNonce(address user) external view returns (uint256);
@@ -51,6 +69,21 @@ interface IOmniChaiGateway is ILayerZeroReceiver {
     function depositRequest(address user, uint256 nonce) external view returns (DepositRequest memory);
 
     function redeemRequest(address user, uint256 nonce) external view returns (RedeemRequest memory);
+
+    function estimateFeeRequestDeposit(
+        uint256 amount,
+        uint256 fee,
+        address _zeroPaymentAddress,
+        uint256 gaslimit
+    ) external view returns (uint256, uint256);
+
+    function estimateFeeRequestCancelDeposit(
+        uint256 nonce,
+        address _zeroPaymentAddress,
+        uint256 gaslimit,
+        uint256 nativeForDst,
+        uint256 returnCallGaslimit
+    ) external view returns (uint256, uint256);
 
     function requestDeposit(
         uint256 amount,
