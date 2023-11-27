@@ -18,6 +18,8 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     error InvalidNativeForDst();
     error UncancellableDeposit();
     error TooLowFee(uint256 minFee, uint256 providedFee);
+    error ExpiredRequest();
+    error InvalidDeadline();
 
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
@@ -170,6 +172,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     }
 
     function requestRedeem(uint256 amount, uint256 desiredDai, uint256 deadline) external {
+        if (deadline <= block.timestamp) revert InvalidDeadline();
         uint256 nonce = redeemNonce(msg.sender);
 
         _redeemRequests[msg.sender].push(RedeemRequest(Status.Pending, amount, desiredDai, deadline));
@@ -188,6 +191,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     function executeRedeemRequest(address user, uint256 nonce) external {
         RedeemRequest storage request = _redeemRequests[user][nonce];
+        if (block.timestamp > request.deadline) revert ExpiredRequest();
         if (request.status != Status.Pending) revert InvalidStatus();
         request.status = Status.Completed;
 
