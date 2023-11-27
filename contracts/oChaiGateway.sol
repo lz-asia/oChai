@@ -20,6 +20,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
     error TooLowFee(uint256 minFee, uint256 providedFee);
     error ExpiredRequest();
     error InvalidDeadline();
+    error InvalidAmount();
 
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
@@ -110,10 +111,11 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         address _zroPaymentAddress,
         uint256 gaslimit
     ) external payable {
-        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit)
-            revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT], gaslimit);
+        if (amount == 0) revert InvalidAmount();
         uint256 minFee = (amount * MINIMUM_FEE_RATE) / 10000;
         if (fee < minFee) revert TooLowFee(minFee, fee);
+        if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT] > gaslimit)
+            revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_DEPOSIT], gaslimit);
 
         uint256 nonce = depositNonce(msg.sender);
 
@@ -140,9 +142,9 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
         uint256 nativeForDst,
         uint256 returnCallGaslimit
     ) external payable {
+        if (nativeForDst == 0) revert InvalidNativeForDst();
         if (minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_CANCEL] > gaslimit)
             revert TooLowGasLimit(minDstGasLookup[CHAIN_ID_GNOSIS][PT_SEND_CANCEL], gaslimit);
-        if (nativeForDst == 0) revert InvalidNativeForDst();
 
         DepositRequest storage request = _depositRequests[msg.sender][nonce];
         if (request.status != Status.Pending) revert InvalidStatus();
@@ -173,6 +175,7 @@ contract OmniChaiGateway is NonblockingLzApp, IOmniChaiGateway {
 
     function requestRedeem(uint256 amount, uint256 desiredDai, uint256 deadline) external {
         if (deadline <= block.timestamp) revert InvalidDeadline();
+        if (amount == 0 || desiredDai == 0) revert InvalidAmount();
         uint256 nonce = redeemNonce(msg.sender);
 
         _redeemRequests[msg.sender].push(RedeemRequest(Status.Pending, amount, desiredDai, deadline));
