@@ -54,6 +54,10 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         else gasLimit = givenGasLimit;
     }
 
+    function _checkRequestStatus(Status status, uint256 amount) internal pure {
+        if (status != Status.Pending || amount != 0) revert InvalidStatus();
+    }
+
     function estimateExecuteDepositRequest(
         uint16 srcChainId,
         address user,
@@ -62,7 +66,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         uint256[] memory gaslimits
     ) external view returns (uint256[2] memory lzNativeFees, uint256[2] memory lzZROFees) {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
-        if (request.status != Status.Pending) revert InvalidStatus();
+        _checkRequestStatus(request.status, request.amount);
 
         bool payInZRO = _zroPaymentAddress != address(0);
 
@@ -91,15 +95,14 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         address _zroPaymentAddress,
         uint256 returnCallGaslimit
     ) external view returns (uint256 lzNativeFee, uint256 lzZROFee) {
-        if (_depositRequests[srcChainId][user][nonce].status != Status.Pending) revert InvalidStatus();
-
-        bool payInZRO = _zroPaymentAddress != address(0);
+        DepositRequest storage request = _depositRequests[srcChainId][user][nonce];
+        _checkRequestStatus(request.status, request.amount);
 
         (lzNativeFee, lzZROFee) = lzEndpoint.estimateFees(
             srcChainId,
             address(this),
             abi.encode(PT_SEND_CANCEL, user, nonce),
-            payInZRO,
+            _zroPaymentAddress != address(0),
             abi.encodePacked(uint16(1), _getGasLimit(srcChainId, PT_SEND_CANCEL, returnCallGaslimit))
         );
     }
@@ -124,7 +127,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         uint256[] memory msgValues
     ) external payable {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
-        if (request.status != Status.Pending) revert InvalidStatus();
+        _checkRequestStatus(request.status, request.amount);
         if (msgValues[0] + msgValues[1] > msg.value) revert InsufficientMsgValue();
 
         _depositRequests[srcChainId][user][nonce].status = Status.Completed;
@@ -166,7 +169,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         uint256[] memory msgValues
     ) external payable {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
-        if (request.status != Status.Pending) revert InvalidStatus();
+        _checkRequestStatus(request.status, request.amount);
         if (msgValues[0] + msgValues[1] > msg.value) revert InsufficientMsgValue();
 
         _depositRequests[srcChainId][user][nonce].status = Status.Completed;
@@ -224,7 +227,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         if (amount == 0) revert InvalidAmount();
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        if (request.status != Status.Pending || request.amount != 0) revert InvalidStatus();
+        _checkRequestStatus(request.status, request.amount);
 
         request.amount = amount;
         request.fee = fee;
@@ -239,7 +242,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         );
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        if (request.status != Status.Pending) revert InvalidStatus();
+        _checkRequestStatus(request.status, request.amount);
 
         request.status = Status.Cancelled;
 
