@@ -11,6 +11,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
     error InvalidStatus();
     error InsufficientMsgValue();
     error InvalidPacketType();
+    error InvalidAmount();
 
     uint16 public constant PT_SEND_DEPOSIT = 1;
     uint16 public constant PT_SEND_CANCEL = 2;
@@ -220,9 +221,10 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
             _payload,
             (uint16, address, uint256, uint256, uint256)
         );
+        if (amount == 0) revert InvalidAmount();
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        if (request.status != Status.Pending) revert InvalidStatus();
+        if (request.status != Status.Pending || request.amount != 0) revert InvalidStatus();
 
         request.amount = amount;
         request.fee = fee;
