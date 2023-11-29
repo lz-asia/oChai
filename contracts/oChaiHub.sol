@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import "@layerzerolabs/solidity-examples/contracts/lzApp/NonblockingLzApp.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/IOmniChaiHub.sol";
 import "./interfaces/IOmniChaiOnGnosis.sol";
 
@@ -40,8 +41,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
     }
 
     function _getMinDstGas(uint16 chainId, uint16 packetType) internal view returns (uint256 minDstGas) {
-        minDstGas = baseMinDstGasLookup[packetType];
-        if (minDstGas == 0) minDstGas = minDstGasLookup[chainId][packetType];
+        return Math.max(baseMinDstGasLookup[packetType], minDstGasLookup[chainId][packetType]);
     }
 
     function _getGasLimit(
