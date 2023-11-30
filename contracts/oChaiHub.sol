@@ -170,12 +170,14 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
     ) external payable {
         DepositRequest memory request = _depositRequests[srcChainId][user][nonce];
         _checkRequestStatus(request.status, request.amount);
-        if (msgValues[0] + msgValues[1] > msg.value) revert InsufficientMsgValue();
+        if (msgValues[0] + msgValues[1] + request.amount - request.fee > msg.value) revert InsufficientMsgValue();
 
         _depositRequests[srcChainId][user][nonce].status = Status.Completed;
 
         // mints oChai to the requester on srcChain
-        uint256 oChaiAmount = IOmniChaiOnGnosis(oChai).depositXDAIAndSendFrom{value: msgValues[0]}(
+        uint256 oChaiAmount = IOmniChaiOnGnosis(oChai).depositXDAIAndSendFrom{
+            value: msgValues[0] + request.amount - request.fee
+        }(
             request.amount - request.fee,
             srcChainId,
             abi.encodePacked(user),
