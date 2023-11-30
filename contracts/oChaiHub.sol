@@ -55,7 +55,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
     }
 
     function _checkRequestStatus(Status status, uint256 amount) internal pure {
-        if (status != Status.Pending || amount != 0) revert InvalidStatus();
+        if (status != Status.Pending || amount == 0) revert InvalidStatus();
     }
 
     function estimateExecuteDepositRequest(
@@ -227,7 +227,7 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
         if (amount == 0) revert InvalidAmount();
 
         DepositRequest storage request = _depositRequests[_srcChainId][user][nonce];
-        _checkRequestStatus(request.status, request.amount);
+        if (request.amount != 0) revert InvalidStatus();
 
         request.amount = amount;
         request.fee = fee;
