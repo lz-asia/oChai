@@ -38,7 +38,29 @@ interface IOmniChaiHub is ILayerZeroReceiver {
 
     function oChai() external view returns (address);
 
+    function wxdai() external view returns (address);
+
+    function PT_SEND_DEPOSIT() external view returns (uint16);
+
+    function PT_SEND_CANCEL() external view returns (uint16);
+
     function baseMinDstGasLookup(uint16 packetType) external view returns (uint256);
+
+    function estimateExecuteDepositRequest(
+        uint16 srcChainId,
+        address user,
+        uint256 nonce,
+        address _zroPaymentAddress,
+        uint256[] calldata gaslimits
+    ) external view returns (uint256[2] memory lzNativeFees, uint256[2] memory lzZROFees);
+
+    function estimateForwardCancel(
+        uint16 srcChainId,
+        address user,
+        uint256 nonce,
+        address _zroPaymentAddress,
+        uint256 returnCallGaslimit
+    ) external view returns (uint256 lzNativeFee, uint256 lzZROFee);
 
     function depositRequest(
         uint16 srcChainId,
