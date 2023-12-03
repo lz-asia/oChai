@@ -18,7 +18,7 @@ interface IOmniChaiHub is ILayerZeroReceiver {
 
     event SetBaseMinDstGas(uint16 packetType, uint256 minDstGas);
     event RecordDepositRequest(uint16 srcChainId, address requester, uint256 nonce, uint256 amount, uint256 fee);
-    event ForwardCancelDepositToSrcChain(address user, uint256 nonce);
+    event ForwardCancelDepositToSrcChain(uint16 srcChainId, address user, uint256 nonce);
 
     event ExecuteDepositRequest(
         uint16 srcChainId,

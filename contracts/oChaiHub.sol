@@ -258,6 +258,6 @@ contract OmniChaiHub is NonblockingLzApp, IOmniChaiHub {
             address(this).balance
         );
 
-        emit ForwardCancelDepositToSrcChain(user, nonce);
+        emit ForwardCancelDepositToSrcChain(_srcChainId, user, nonce);
     }
 }
